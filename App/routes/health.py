@@ -206,8 +206,9 @@ def list_health():
         JOIN health_indicator_details hi ON hs.health_indicator_id = hi.health_indicator_id
         {where_sql}
         ORDER BY {sort_col} {'DESC' if order == 'desc' else 'ASC'}
-        LIMIT {per_page} OFFSET {offset}
+        LIMIT %s OFFSET %s
     """
+    params.extend([per_page, offset])
     cur.execute(data_sql, params)
     rows = cur.fetchall()
     cur.close()

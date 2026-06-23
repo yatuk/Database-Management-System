@@ -94,7 +94,8 @@ def list_energy():
 
     # Apply pagination
     offset = (page - 1) * per_page
-    query += f" LIMIT {per_page} OFFSET {offset}"
+    query += " LIMIT %s OFFSET %s"
+    params.extend([per_page, offset])
 
     cur.execute(query, params)
     summary_rows = cur.fetchall()

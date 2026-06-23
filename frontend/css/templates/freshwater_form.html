@@ -17,6 +17,7 @@
             {% endif %}"
     class="row g-3"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="col-md-4">
       <label for="country_id" class="form-label">Country</label>
       <select

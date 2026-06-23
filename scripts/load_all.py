@@ -2,20 +2,19 @@ import os
 import sys
 import csv
 import mysql.connector
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # ensure repository root is on sys.path so `from App ...` imports work
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASSWORD", "db_pass")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = int(os.getenv("DB_PORT", "3306"))
-DB_NAME = os.getenv("DB_NAME", "wdi_project")
+from App.config import DB_CONFIG
+
+DB_USER = DB_CONFIG["user"]
+DB_PASS = DB_CONFIG["password"]
+DB_HOST = DB_CONFIG["host"]
+DB_PORT = DB_CONFIG["port"]
+DB_NAME = DB_CONFIG["database"]
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DATA_DIR = os.path.join(BASE_DIR, 'Data')

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, session
 from mysql.connector import Error as MySQLError
 from mysql.connector.errors import IntegrityError
 from types import SimpleNamespace
@@ -136,7 +136,8 @@ def list_ghg():
         total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
 
         offset = (page - 1) * per_page
-        query += f" LIMIT {per_page} OFFSET {offset}"
+        query += " LIMIT %s OFFSET %s"
+        params.extend([per_page, offset])
 
         cursor.execute(query, params)
         raw_rows = cursor.fetchall()
@@ -613,7 +614,7 @@ def add_ghg():
             share_of_total_pct = request.form.get("share_of_total_pct") or None
             uncertainty_pct = request.form.get("uncertainty_pct") or None
             source_notes = request.form.get("source_notes") or None
-            student_id = request.form.get("student_id") or None
+            student_id = session.get("student_id")
 
             if share_of_total_pct == "":
                 share_of_total_pct = None
@@ -730,7 +731,7 @@ def edit_ghg(id):
             uncertainty_pct = int(uncertainty_val) if uncertainty_val and uncertainty_val.strip() else None
             year = request.form.get("year", type=int)
             source_notes = request.form.get("source_notes") or None
-            student_id = request.form.get("student_id") or None
+            student_id = session.get("student_id")
 
             update_query = """
                 UPDATE greenhouse_emissions
@@ -880,7 +881,7 @@ def api_add_ghg():
         share_of_total_pct = data.get("share_of_total_pct") or None
         uncertainty_pct = data.get("uncertainty_pct") or None
         source_notes = data.get("source_notes") or None
-        audit_user_id = data.get("audit_user_id") or None
+        audit_user_id = session.get("student_id")
 
         if not all([c_id, i_id, year, indicator_value is not None]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
@@ -889,8 +890,6 @@ def api_add_ghg():
             share_of_total_pct = None
         if uncertainty_pct == "":
             uncertainty_pct = None
-        if audit_user_id == "":
-            audit_user_id = None
 
         insert_query = """
             INSERT INTO greenhouse_emissions 
@@ -953,12 +952,10 @@ def api_edit_ghg(id):
         uncertainty_val = data.get("uncertainty_pct")
         year = data.get("year")
         source_notes = data.get("source_notes") or None
-        audit_user_id = data.get("audit_user_id") or None
+        audit_user_id = session.get("student_id")
 
         share_of_total_pct = int(share_val) if share_val and str(share_val).strip() else None
         uncertainty_pct = int(uncertainty_val) if uncertainty_val and str(uncertainty_val).strip() else None
-        if audit_user_id == "":
-            audit_user_id = None
 
         if indicator_value is None or year is None:
             return jsonify({"success": False, "error": "Missing required fields"}), 400
@@ -1025,9 +1022,7 @@ def api_delete_ghg(id):
             return jsonify({"success": False, "error": "Record not found"}), 404
 
         data = request.get_json() or {}
-        audit_user_id = data.get("audit_user_id") or None
-        if audit_user_id == "":
-            audit_user_id = None
+        audit_user_id = session.get("student_id")
 
         cursor.execute("DELETE FROM greenhouse_emissions WHERE row_id = %s", (id,))
 

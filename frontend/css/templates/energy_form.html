@@ -31,9 +31,10 @@
         </div>
 
         <div class="card-body p-4">
-          <form method="post" 
+          <form method="post"
                 action="{% if action == 'Add' %}{{ url_for('energy.add_energy') }}{% else %}{{ url_for('energy.edit_energy', id=record.data_id) }}{% endif %}"
                 class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             
             <div class="mb-4">
               <label class="form-label fw-semibold">

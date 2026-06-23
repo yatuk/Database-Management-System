@@ -13,6 +13,7 @@
         </p>
 
         <form method="post" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="mb-3">
             <label for="student_number" class="form-label">Student Number</label>
             <input

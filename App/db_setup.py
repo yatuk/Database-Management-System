@@ -1,17 +1,16 @@
 import os
 import re
 import mysql.connector
-from dotenv import load_dotenv
 
-load_dotenv()
+from App.config import DB_CONFIG
 
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASSWORD", "db_pass")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "wdi_project")
-DB_PORT = int(os.getenv("DB_PORT", "3306"))
+DB_USER = DB_CONFIG["user"]
+DB_PASS = DB_CONFIG["password"]
+DB_HOST = DB_CONFIG["host"]
+DB_NAME = DB_CONFIG["database"]
+DB_PORT = DB_CONFIG["port"]
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SQL_FILE_PATH = os.path.join(BASE_DIR, 'SQL', 'database.sql')
+SQL_FILE_PATH = os.path.join(BASE_DIR, "SQL", "database.sql")
 
 
 def _exec_statements(cursor, sql_text: str):

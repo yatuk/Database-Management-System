@@ -3,7 +3,7 @@
 import mysql.connector
 from urllib.parse import urlencode
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, session
 from App.db import get_db
 from App.routes.login import admin_required, editor_required
 
@@ -398,8 +398,9 @@ def list_freshwater():
             ON fd.freshwater_indicator_id = fi.freshwater_indicator_id
         {where_sql}
         ORDER BY {sort_col_sql} {sort_dir_sql}
-        LIMIT {per_page} OFFSET {offset}
+        LIMIT %s OFFSET %s
     """
+    params.extend([per_page, offset])
 
     cur = conn.cursor(dictionary=True)
     cur.execute(data_sql, params)
@@ -484,7 +485,7 @@ def add_freshwater():
         year = request.form.get("year")
         val = request.form.get("indicator_value")
         note = request.form.get("source_notes")
-        student_id = request.form.get("student_id") or None
+        student_id = session.get("student_id")
 
         try:
             cur = conn.cursor()
@@ -558,7 +559,7 @@ def edit_freshwater(id):
             indicator_value = request.form.get("indicator_value")
             year = request.form.get("year")
             source_notes = request.form.get("source_notes")
-            student_id = request.form.get("student_id") or None
+            student_id = session.get("student_id")
 
             cur = conn.cursor()
 
@@ -610,7 +611,7 @@ def delete_freshwater(id):
         cur = conn.cursor()
         cur.execute("DELETE FROM freshwater_data WHERE data_id = %s", (id,))
 
-        student_id = request.form.get("student_id") or None
+        student_id = session.get("student_id")
         if student_id:
             audit_sql = """
                 INSERT INTO audit_logs (student_id, action_type, table_name, record_id)

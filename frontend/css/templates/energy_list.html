@@ -640,8 +640,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-let sortColumn = '{{ sort_by }}';
-let sortOrder = '{{ sort_order }}';
+let sortColumn = {{ sort_by|tojson }};
+let sortOrder = {{ sort_order|tojson }};
 
 // Update sort indicators
 document.querySelectorAll('th[data-sort]').forEach(th => {

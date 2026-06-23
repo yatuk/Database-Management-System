@@ -1,16 +1,11 @@
 import sys
 import os
-from dotenv import load_dotenv
- 
+
 # Add project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
- 
-# Load .env file from project root
-env_path = os.path.join(project_root, '.env')
-load_dotenv(env_path)
- 
+
 from App.routes import create_app  # type: ignore
 from App.db import get_db
  
