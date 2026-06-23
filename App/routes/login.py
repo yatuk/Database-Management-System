@@ -1,19 +1,15 @@
-# App/routes/login.py
+"""Authentication blueprint -- JSON API for React SPA."""
 
 from functools import wraps
 from typing import Callable
 
 from flask import (
     Blueprint,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session,
-    flash,
     abort,
+    jsonify,
+    request,
+    session,
 )
-
 from werkzeug.security import check_password_hash
 
 from App.db import get_db
@@ -21,23 +17,14 @@ from App.db import get_db
 login_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-# -------------------------------
-# Role helpers
-# -------------------------------
-def get_current_role() -> str:
-    """
-    Map session team_no to a semantic role string.
+# ---- Role helpers ----
 
-    - viewer  (default, unauthenticated or unknown)
-    - editor  (team_no == 2)
-    - admin   (team_no == 1)
-    """
+def get_current_role() -> str:
     team = session.get("team_no", 0)
     try:
         team = int(team)
     except (TypeError, ValueError):
         team = 0
-
     if team == 1:
         return "admin"
     if team == 2:
@@ -46,99 +33,78 @@ def get_current_role() -> str:
 
 
 def editor_required(f: Callable) -> Callable:
-    """
-    Require at least editor privileges.
-    Editors and admins are allowed; viewers are blocked.
-    """
     @wraps(f)
     def decorated_function(*args: object, **kwargs: object) -> object:
-        role = get_current_role()
-        if role not in ("editor", "admin"):
-            # Read-only users must not be able to POST create/update
+        if get_current_role() not in ("editor", "admin"):
             abort(403)
         return f(*args, **kwargs)
-
     return decorated_function
 
 
 def admin_required(f: Callable) -> Callable:
-    """
-    Require admin privileges for destructive or system-level actions.
-    """
     @wraps(f)
     def decorated_function(*args: object, **kwargs: object) -> object:
-        role = get_current_role()
-        if role != "admin":
+        if get_current_role() != "admin":
             abort(403)
         return f(*args, **kwargs)
-
     return decorated_function
 
 
-# -------------------------------
-# Admin Login
-# -------------------------------
-@login_bp.route("/login", methods=["GET", "POST"])
+# ---- Login ----
+
+@login_bp.route("/login", methods=["POST"])
 def login():
-    if request.method == "POST":
-        entered_number = request.form.get("student_number", "").strip()
-        entered_password = request.form.get("password", "").strip()
+    """Authenticate and return JSON."""
+    entered_number = request.form.get("student_number", "").strip()
+    entered_password = request.form.get("password", "").strip()
 
-        if not entered_number:
-            flash("Please enter a student number.", "danger")
-            return redirect(url_for("auth.login"))
+    if not entered_number:
+        return jsonify({"success": False, "error": "Please enter a student number."}), 400
 
-        conn = get_db()
-        cur = conn.cursor(dictionary=True)
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute(
+        """
+        SELECT student_id, student_number, full_name, team_no, password_hash
+        FROM students WHERE student_number = %s
+        """,
+        (entered_number,),
+    )
+    student = cur.fetchone()
+    cur.close()
 
-        cur.execute(
-            """
-            SELECT student_id, student_number, full_name, team_no, password_hash
-            FROM students
-            WHERE student_number = %s
-            """,
-            (entered_number,),
-        )
-        student = cur.fetchone()
-        cur.close()
+    if not student:
+        return jsonify({"success": False, "error": "User not found."}), 401
 
-        if not student:
-            flash("User not found.", "danger")
-            return redirect(url_for("auth.login"))
+    team_no = int(student.get("team_no") or 0)
+    if team_no not in (1, 2):
+        return jsonify({"success": False, "error": "You do not have permission."}), 403
 
-        team_no = int(student.get("team_no") or 0)
-        # Only known roles (admin/editor) are allowed to authenticate;
-        # viewers remain unauthenticated by design.
-        if team_no not in (1, 2):
-            flash("You do not have permission to sign in.", "danger")
-            return redirect(url_for("auth.login"))
+    password_hash = student.get("password_hash")
+    if password_hash:
+        if not entered_password:
+            return jsonify({"success": False, "error": "Please enter your password."}), 400
+        if not check_password_hash(password_hash, entered_password):
+            return jsonify({"success": False, "error": "Invalid password."}), 401
 
-        # Password verification
-        password_hash = student.get("password_hash")
-        if password_hash:
-            # Hash exists: verify against it
-            if not entered_password:
-                flash("Please enter your password.", "danger")
-                return redirect(url_for("auth.login"))
-            if not check_password_hash(password_hash, entered_password):
-                flash("Invalid password.", "danger")
-                return redirect(url_for("auth.login"))
-        # If no password_hash is set, skip password check (backward compat)
+    session["student_id"] = student["student_id"]
+    session["student_number"] = student["student_number"]
+    session["team_no"] = team_no
 
-        # Save login session
-        session["student_id"] = student["student_id"]
-        session["student_number"] = student["student_number"]
-        session["team_no"] = team_no
-
-        return redirect(url_for("dashboard.dashboard"))
-
-    return render_template("login.html")
+    return jsonify({
+        "success": True,
+        "user": {
+            "student_id": student["student_id"],
+            "student_number": student["student_number"],
+            "full_name": student["full_name"],
+            "role": get_current_role(),
+        },
+    })
 
 
-# -------------------------------
-# Logout
-# -------------------------------
+# ---- Logout ----
+
 @login_bp.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("auth.login"))
+    return jsonify({"success": True})

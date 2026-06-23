@@ -11,6 +11,8 @@ import {
   type ListParams,
 } from "../api/domain";
 import { useAuth } from "../hooks/useAuth";
+import TrendExplorer from "../components/charts/TrendExplorer";
+import SnapshotWidget from "../components/charts/SnapshotWidget";
 import type { Domain, DomainRecord } from "../types";
 
 const DOMAIN_META: Record<Domain, { label: string; icon: string }> = {
@@ -167,6 +169,10 @@ export default function DomainListPage() {
           ))}
         </select>
       </div>
+
+      {/* Charts */}
+      <TrendExplorer domain={d} />
+      <SnapshotWidget domain={d} />
 
       {/* Table */}
       {isLoading ? (

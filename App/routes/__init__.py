@@ -1,4 +1,4 @@
-"""Flask application factory."""
+"""Flask application factory -- React SPA + REST API backend."""
 
 import os
 import secrets
@@ -7,17 +7,15 @@ from datetime import timedelta
 from flask import (
     Flask,
     abort,
-    g,
-    redirect,
     request,
     send_from_directory,
     session,
     url_for,
+    redirect,
 )
 
 from App.db import close_db
 from App.config import (
-    DEBUG,
     PERMANENT_SESSION_LIFETIME,
     SECRET_KEY,
     SESSION_COOKIE_HTTPONLY,
@@ -34,7 +32,6 @@ def create_app() -> Flask:
 
     app = Flask(
         __name__,
-        template_folder=os.path.join(BASE_DIR, "frontend", "css", "templates"),
         static_folder=os.path.join(BASE_DIR, "frontend", "css"),
     )
 
@@ -74,24 +71,14 @@ def create_app() -> Flask:
     # ---- CSRF Protection ----
     @app.before_request
     def csrf_protect():
-        """Validate CSRF token on all state-changing requests.
-
-        API endpoints use ``X-CSRF-Token`` header.
-        Form-based endpoints use ``csrf_token`` form field.
-        """
         if request.method in ("GET", "HEAD", "OPTIONS"):
             return
-
-        # Generate a CSRF token on first access
         if "csrf_token" not in session:
             session["csrf_token"] = secrets.token_hex(32)
-
-        # /api/* endpoints: read from X-CSRF-Token header
         if request.path.startswith("/api/"):
             token = request.headers.get("X-CSRF-Token")
         else:
             token = request.form.get("csrf_token")
-
         if not token or not secrets.compare_digest(
             token, session.get("csrf_token", "")
         ):
@@ -114,68 +101,33 @@ def create_app() -> Flask:
         return response
 
     # ---- Blueprints ----
-    from App.routes.api import api_bp
-    from App.routes.sustainability import sustainability_bp
-    from App.routes.about import about_bp
-    from App.routes.login import login_bp, get_current_role
-    from App.routes.health import health_bp
-    from App.routes.dashboard import dashboard_bp
-    from App.routes.freshwater import freshwater_bp
-    from App.routes.ghg import ghg_bp
-    from App.routes.energy import energy_bp
-    from App.routes.countries import countries_bp
+    from App.routes.login import login_bp   # /auth/login, /auth/logout
+    from App.routes.api import api_bp       # /api/*  (all JSON endpoints)
 
-    app.register_blueprint(api_bp)          # /api/*
-    app.register_blueprint(countries_bp)     # /countries/*
-    app.register_blueprint(about_bp)         # /about
-    app.register_blueprint(login_bp)         # /auth/*
-    app.register_blueprint(health_bp)        # /health/*
-    app.register_blueprint(dashboard_bp)     # /dashboard
-    app.register_blueprint(sustainability_bp)
-    app.register_blueprint(freshwater_bp)
-    app.register_blueprint(ghg_bp)
-    app.register_blueprint(energy_bp)
-
-    # ---- Global Template Context ----
-    @app.context_processor
-    def inject_role_and_csrf():
-        """Expose current user role and CSRF token to all templates."""
-        role = get_current_role()
-        return {
-            "current_role": role,
-            "is_admin": role == "admin",
-            "is_editor": role == "editor",
-            "is_viewer": role == "viewer",
-            "csrf_token": session.get("csrf_token", ""),
-        }
+    app.register_blueprint(api_bp)
+    app.register_blueprint(login_bp)
 
     # ---- React SPA routes ----
     react_ready = os.path.isdir(REACT_DIST)
 
     @app.route("/")
     def index():
-        """Serve React SPA or redirect to login."""
         if react_ready:
             return send_from_directory(REACT_DIST, "index.html")
         return redirect(url_for("auth.login"))
 
     if react_ready:
-
         @app.route("/assets/<path:filename>")
         def react_assets(filename: str):
             return send_from_directory(os.path.join(REACT_DIST, "assets"), filename)
 
         @app.route("/<path:path>")
         def spa_fallback(path: str):
-            """Catch-all: serve React index.html for client-side routing."""
-            # Don't intercept API/auth/blueprint routes
-            reserved = ("api", "auth", "countries", "health", "ghg", "energy",
-                        "freshwater", "sustainability", "dashboard", "about")
+            reserved = ("api", "auth")
             if path.split("/")[0] in reserved:
                 abort(404)
             ext = os.path.splitext(path)[1]
-            if ext and ext != ".html":
-                # static assets that don't exist in our static folder
+            if ext and ext not in (".html", ""):
                 try:
                     return send_from_directory(REACT_DIST, path)
                 except Exception:
