@@ -1,6 +1,8 @@
+import csv
+import logging
 import os
 import sys
-import csv
+
 import mysql.connector
 
 # ensure repository root is on sys.path so `from App ...` imports work
@@ -9,6 +11,8 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 from App.config import DB_CONFIG
+
+logger = logging.getLogger(__name__)
 
 DB_USER = DB_CONFIG["user"]
 DB_PASS = DB_CONFIG["password"]
@@ -65,7 +69,7 @@ def load_csv_to_table(csv_path, table_name, column_order=None, dedupe_key=None, 
             rows.append(filtered)
 
     if not rows:
-        print(f"No rows found in {csv_path}")
+        logger.warning("No rows found in %s", csv_path)
         return {}
 
     # optionally deduplicate rows by a key (useful for indicator detail tables)
@@ -120,7 +124,7 @@ def load_csv_to_table(csv_path, table_name, column_order=None, dedupe_key=None, 
     finally:
         cur.close()
 
-    print(f"Loaded {len(rows)} rows into {table_name} from {csv_path}")
+    logger.info("Loaded %d rows into %s from %s", len(rows), table_name, csv_path)
     return id_mapping_result
 
 
@@ -131,7 +135,7 @@ def main():
         from App.db_setup import setup_nuclear
         setup_nuclear()
     except Exception as e:
-        print(f"Warning: could not run setup_nuclear(): {e}")
+        logger.warning("Could not run setup_nuclear(): %s", e)
 
     # open a DB connection and disable foreign key checks for the duration of the bulk load
     conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, database=DB_NAME, port=DB_PORT)
@@ -162,7 +166,7 @@ def main():
     for fname, (table, cols, *extra) in mapping.items():
         csv_path = os.path.join(DATA_DIR, fname)
         if not os.path.exists(csv_path):
-            print(f"CSV not found: {csv_path}, skipping {table}")
+            logger.warning("CSV not found: %s, skipping %s", csv_path, table)
             continue
         # some CSV headers use slightly different names; try to standardize keys
         # For freshwater_data and health_system consistency, our load function maps by header names.

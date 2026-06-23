@@ -587,7 +587,8 @@ def edit_freshwater(id):
 
         except Exception as e:
             conn.rollback()
-            return f"Update Error (freshwater): {e}"
+            flash("An error occurred while updating the record.", "danger")
+            return redirect(url_for("freshwater.list_freshwater"))
 
     return render_template(
         "freshwater_form.html",

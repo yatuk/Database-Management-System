@@ -1,7 +1,19 @@
 # App/routes/login.py
 
 from functools import wraps
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
+from typing import Callable
+
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash,
+    abort,
+)
+
 from App.db import get_db
 
 login_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -31,13 +43,13 @@ def get_current_role() -> str:
     return "viewer"
 
 
-def editor_required(f):
+def editor_required(f: Callable) -> Callable:
     """
     Require at least editor privileges.
     Editors and admins are allowed; viewers are blocked.
     """
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: object, **kwargs: object) -> object:
         role = get_current_role()
         if role not in ("editor", "admin"):
             # Read-only users must not be able to POST create/update
@@ -47,12 +59,12 @@ def editor_required(f):
     return decorated_function
 
 
-def admin_required(f):
+def admin_required(f: Callable) -> Callable:
     """
     Require admin privileges for destructive or system-level actions.
     """
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: object, **kwargs: object) -> object:
         role = get_current_role()
         if role != "admin":
             abort(403)

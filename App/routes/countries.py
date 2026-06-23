@@ -1,6 +1,11 @@
+import logging
+
 from flask import Blueprint, render_template, request, jsonify, abort, redirect, url_for
+
 from App.db import get_db
 from App.constants import ISO2_TO_ISO3
+
+logger = logging.getLogger(__name__)
 
 countries_bp = Blueprint("countries", __name__, url_prefix="/countries")
 
@@ -260,7 +265,7 @@ def get_region_stats():
         stats["sustainability"] = cur.fetchall()
 
     except Exception as e:
-        print(f"Error fetching regional stats: {e}")
+        logger.error("Error fetching regional stats: %s", e)
         return jsonify({"error": str(e)}), 500
     finally:
         cur.close()

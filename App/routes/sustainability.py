@@ -355,6 +355,7 @@ def delete_sustainability(id):
 
     except Exception as e:
         db.rollback()
-        return f"Error (sustainability): {e}"
+        flash("An error occurred while deleting the record.", "danger")
+        return redirect(url_for("sustainability.list_sustainability"))
 
     return redirect(url_for("sustainability.list_sustainability"))
