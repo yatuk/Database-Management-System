@@ -1,6 +1,7 @@
 """pytest fixtures for the WDI Flask application."""
 
 import os
+import secrets
 
 import pytest
 
@@ -34,10 +35,11 @@ def client(app):
 
 @pytest.fixture
 def csrf_token(client):
-    """Get a valid CSRF token by hitting /api/auth/me."""
-    client.get("/api/auth/me")
+    """Generate a valid CSRF token and inject it into the session."""
+    token = secrets.token_hex(32)
     with client.session_transaction() as sess:
-        return sess.get("csrf_token", "")
+        sess["csrf_token"] = token
+    return token
 
 
 @pytest.fixture
