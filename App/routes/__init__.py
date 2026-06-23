@@ -1,28 +1,32 @@
+"""Flask application factory."""
+
 import os
 import secrets
 from datetime import timedelta
 
 from flask import (
     Flask,
-    redirect,
-    url_for,
-    session,
-    request,
     abort,
     g,
-)
-from App.db import close_db
-from App.config import (
-    SECRET_KEY,
-    DEBUG,
-    SESSION_COOKIE_SECURE,
-    SESSION_COOKIE_HTTPONLY,
-    SESSION_COOKIE_SAMESITE,
-    PERMANENT_SESSION_LIFETIME,
+    redirect,
+    request,
+    send_from_directory,
+    session,
+    url_for,
 )
 
-# Project base directory (root of the repo)
+from App.db import close_db
+from App.config import (
+    DEBUG,
+    PERMANENT_SESSION_LIFETIME,
+    SECRET_KEY,
+    SESSION_COOKIE_HTTPONLY,
+    SESSION_COOKIE_SAMESITE,
+    SESSION_COOKIE_SECURE,
+)
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REACT_DIST = os.path.join(BASE_DIR, "react", "dist")
 
 
 def create_app() -> Flask:
@@ -70,17 +74,24 @@ def create_app() -> Flask:
     # ---- CSRF Protection ----
     @app.before_request
     def csrf_protect():
-        """Validate CSRF token on all state-changing requests."""
+        """Validate CSRF token on all state-changing requests.
+
+        API endpoints use ``X-CSRF-Token`` header.
+        Form-based endpoints use ``csrf_token`` form field.
+        """
         if request.method in ("GET", "HEAD", "OPTIONS"):
             return
 
-        # Generate a CSRF token on first access and store it in the session.
+        # Generate a CSRF token on first access
         if "csrf_token" not in session:
             session["csrf_token"] = secrets.token_hex(32)
 
-        token = request.form.get("csrf_token") or request.headers.get(
-            "X-CSRF-Token"
-        )
+        # /api/* endpoints: read from X-CSRF-Token header
+        if request.path.startswith("/api/"):
+            token = request.headers.get("X-CSRF-Token")
+        else:
+            token = request.form.get("csrf_token")
+
         if not token or not secrets.compare_digest(
             token, session.get("csrf_token", "")
         ):
@@ -92,9 +103,7 @@ def create_app() -> Flask:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers[
-            "Content-Security-Policy"
-        ] = (
+        response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
@@ -105,6 +114,7 @@ def create_app() -> Flask:
         return response
 
     # ---- Blueprints ----
+    from App.routes.api import api_bp
     from App.routes.sustainability import sustainability_bp
     from App.routes.about import about_bp
     from App.routes.login import login_bp, get_current_role
@@ -115,11 +125,12 @@ def create_app() -> Flask:
     from App.routes.energy import energy_bp
     from App.routes.countries import countries_bp
 
-    app.register_blueprint(countries_bp)
-    app.register_blueprint(about_bp)
-    app.register_blueprint(login_bp)
-    app.register_blueprint(health_bp)
-    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(api_bp)          # /api/*
+    app.register_blueprint(countries_bp)     # /countries/*
+    app.register_blueprint(about_bp)         # /about
+    app.register_blueprint(login_bp)         # /auth/*
+    app.register_blueprint(health_bp)        # /health/*
+    app.register_blueprint(dashboard_bp)     # /dashboard
     app.register_blueprint(sustainability_bp)
     app.register_blueprint(freshwater_bp)
     app.register_blueprint(ghg_bp)
@@ -138,9 +149,37 @@ def create_app() -> Flask:
             "csrf_token": session.get("csrf_token", ""),
         }
 
-    # ---- Root redirect ----
+    # ---- React SPA routes ----
+    react_ready = os.path.isdir(REACT_DIST)
+
     @app.route("/")
     def index():
+        """Serve React SPA or redirect to login."""
+        if react_ready:
+            return send_from_directory(REACT_DIST, "index.html")
         return redirect(url_for("auth.login"))
+
+    if react_ready:
+
+        @app.route("/assets/<path:filename>")
+        def react_assets(filename: str):
+            return send_from_directory(os.path.join(REACT_DIST, "assets"), filename)
+
+        @app.route("/<path:path>")
+        def spa_fallback(path: str):
+            """Catch-all: serve React index.html for client-side routing."""
+            # Don't intercept API/auth/blueprint routes
+            reserved = ("api", "auth", "countries", "health", "ghg", "energy",
+                        "freshwater", "sustainability", "dashboard", "about")
+            if path.split("/")[0] in reserved:
+                abort(404)
+            ext = os.path.splitext(path)[1]
+            if ext and ext != ".html":
+                # static assets that don't exist in our static folder
+                try:
+                    return send_from_directory(REACT_DIST, path)
+                except Exception:
+                    abort(404)
+            return send_from_directory(REACT_DIST, "index.html")
 
     return app

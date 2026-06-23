@@ -9,3 +9,7 @@ __pycache__/
 dist/
 .pytest_cache/
 
+
+# React
+react/node_modules/
+react/dist/
