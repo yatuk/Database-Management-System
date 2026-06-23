@@ -53,6 +53,20 @@ def create_app() -> Flask:
     # ---- Teardown ----
     app.teardown_appcontext(close_db)
 
+    # ---- Rate Limiting ----
+    try:
+        from flask_limiter import Limiter
+        from flask_limiter.util import get_remote_address
+
+        Limiter(
+            app=app,
+            key_func=get_remote_address,
+            default_limits=["200 per day", "50 per hour"],
+            storage_uri="memory://",
+        )
+    except ImportError:
+        pass
+
     # ---- CSRF Protection ----
     @app.before_request
     def csrf_protect():

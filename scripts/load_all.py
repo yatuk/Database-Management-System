@@ -129,13 +129,11 @@ def load_csv_to_table(csv_path, table_name, column_order=None, dedupe_key=None, 
 
 
 def main():
-    # create/drop DB and schema
-    try:
-        # import locally to avoid circular at module import
-        from App.db_setup import setup_nuclear
-        setup_nuclear()
-    except Exception as e:
-        logger.warning("Could not run setup_nuclear(): %s", e)
+    """Load all CSV data into the database.
+
+    The database schema must already exist (created via ``alembic upgrade head``
+    or ``SQL/database.sql``). This script only loads data, not schema.
+    """
 
     # open a DB connection and disable foreign key checks for the duration of the bulk load
     conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, database=DB_NAME, port=DB_PORT)
