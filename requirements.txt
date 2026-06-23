@@ -1,7 +1,9 @@
 flask>=2.3,<4
 python-dotenv>=1.0
 mysql-connector-python>=8.0
+sqlalchemy>=2.0
 waitress>=3.0
+werkzeug>=2.3
 alembic>=1.13
 flask-limiter>=3.5
 pytest>=8.0

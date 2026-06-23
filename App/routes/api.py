@@ -5,13 +5,13 @@ All endpoints return JSON. State-changing endpoints require
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from flask import Blueprint, abort, jsonify, request, session
 
 from App.db import get_db
 from App.routes.login import admin_required, editor_required, get_current_role
-from App.routes.shared import get_countries, get_indicators, log_audit, safe_float
+from App.routes.shared import get_indicators, log_audit
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,10 @@ PER_PAGE = 50
 def _paginate_query(
     base_sql: str,
     count_sql: str,
-    params: List[Any],
+    params: list[Any],
     page: int,
     per_page: int = PER_PAGE,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Execute a paginated query and return {data, total, page, total_pages}."""
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -54,7 +54,7 @@ def _paginate_query(
     }
 
 
-def _build_where(params: List[Any], **filters: Any) -> str:
+def _build_where(params: list[Any], **filters: Any) -> str:
     """Build a WHERE clause from keyword filters. Populates *params* in-place."""
     clauses = ["1=1"]
     for col, val in filters.items():
@@ -68,7 +68,7 @@ def _build_where(params: List[Any], **filters: Any) -> str:
     return " AND ".join(clauses)
 
 
-def _single_row(table: str, pk: str, id: int) -> Optional[Dict[str, Any]]:
+def _single_row(table: str, pk: str, id: int) -> Optional[dict[str, Any]]:
     """Return a single row or None."""
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -110,7 +110,7 @@ def dashboard():
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     try:
         cur.execute("SELECT COUNT(*) AS cnt FROM countries")
         result["countries"] = cur.fetchone()["cnt"]
@@ -123,7 +123,7 @@ def dashboard():
             ("sustainability", "sustainability_data", "sustainability_indicator_details", "sus_indicator_id"),
         ]
 
-        for name, fact, detail, pk in domains:
+        for name, fact, detail, _pk in domains:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {detail}")
             ind_cnt = cur.fetchone()["cnt"]
             try:
@@ -160,7 +160,7 @@ def api_countries():
 
     try:
         where = "1=1"
-        params: List[Any] = []
+        params: list[Any] = []
         if search:
             where = "(LOWER(c.country_name) LIKE %s OR LOWER(c.country_code) LIKE %s)"
             pattern = f"%{search.lower()}%"
@@ -254,7 +254,7 @@ def api_region_profile(region_name: str):
         if not cur.fetchone():
             abort(404)
 
-        result: Dict[str, Any] = {"region": region_name, "domains": {}}
+        result: dict[str, Any] = {"region": region_name, "domains": {}}
 
         domain_queries = [
             ("health", "health_system", "health_indicator_details", "health_indicator_id", "indicator_value"),
@@ -357,7 +357,7 @@ _DOMAIN_CONFIG = {
 }
 
 
-def _domain_config(domain: str) -> Dict[str, Any]:
+def _domain_config(domain: str) -> dict[str, Any]:
     cfg = _DOMAIN_CONFIG.get(domain)
     if not cfg:
         abort(404, description=f"Unknown domain: {domain}")
@@ -368,7 +368,7 @@ def _domain_config(domain: str) -> Dict[str, Any]:
 def api_domain_list(domain: str):
     """Paginated list of domain records with joined country/indicator names."""
     cfg = _domain_config(domain)
-    f, d, fk, pk, val, year, src = (
+    f, d, fk, pk, val, year, _src = (
         cfg["fact"], cfg["detail"], cfg["fk"], cfg["pk"],
         cfg["val"], cfg["year"], cfg["source"],
     )
@@ -393,7 +393,7 @@ def api_domain_list(domain: str):
     }
     sort_col = allowed_sort.get(sort_by, f"f.{year}")
     sort_dir = "ASC" if order.upper() == "ASC" else "DESC"
-    params: List[Any] = []
+    params: list[Any] = []
     where = _build_where(
         params,
         country_name_like=country,
@@ -530,7 +530,7 @@ def api_domain_edit(domain: str, id: int):
         cursor = db.cursor()
         try:
             sets = [f"{val} = %s", f"{year} = %s", f"{src} = %s"]
-            params: List[Any] = [data.get(val), data.get(year), data.get(src, "")]
+            params: list[Any] = [data.get(val), data.get(year), data.get(src, "")]
             params.append(id)
             sql = f"UPDATE {f} SET {', '.join(sets)} WHERE {pk} = %s"
             cursor.execute(sql, params)

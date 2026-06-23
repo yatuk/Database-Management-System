@@ -58,7 +58,7 @@ def setup_nuclear() -> None:
 
     # connect to the newly created database and run SQL script
     try:
-        with open(SQL_FILE_PATH, "r", encoding="utf-8") as f:
+        with open(SQL_FILE_PATH, encoding="utf-8") as f:
             sql_script = f.read()
     except FileNotFoundError:
         logger.error("SQL file not found: '%s'.", SQL_FILE_PATH)

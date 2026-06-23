@@ -6,9 +6,9 @@ Each domain (energy, freshwater, ghg, health, sustainability) can subclass
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, render_template, request
 
 from App.db import get_db
 from App.routes.shared import (
@@ -45,14 +45,14 @@ class DomainCRUD:
     indicator_unit_col: str = "measurement_unit"
 
     # Extra fact columns beyond (country_id, indicator_id, year, value, source)
-    extra_fact_columns: Dict[str, str] = {}  # {db_col: label}
+    extra_fact_columns: dict[str, str] = {}  # {db_col: label}
 
     # Template names
     list_template: str = ""
     form_template: str = ""
 
     # Sort map: query param value -> SQL column expression
-    sort_map: Dict[str, str] = {}
+    sort_map: dict[str, str] = {}
 
     # Pagination
     per_page: int = 50
@@ -88,7 +88,7 @@ class DomainCRUD:
         try:
             # WHERE clause
             where_clauses = ["1=1"]
-            params: List[Any] = []
+            params: list[Any] = []
 
             if country_name:
                 where_clauses.append("c.country_name LIKE %s")
@@ -183,8 +183,9 @@ class DomainCRUD:
     @classmethod
     def api_add(cls):
         """Create a new record, log audit, return JSON."""
-        from App.routes.login import editor_required
         from flask import jsonify
+
+        from App.routes.login import editor_required
 
         @editor_required
         def _add():
@@ -232,8 +233,9 @@ class DomainCRUD:
     @classmethod
     def api_edit(cls, id: int):
         """Update a record, log audit, return JSON."""
-        from App.routes.login import editor_required
         from flask import jsonify
+
+        from App.routes.login import editor_required
 
         @editor_required
         def _edit():
@@ -254,7 +256,7 @@ class DomainCRUD:
                         f"{cls.value_column} = %s",
                         f"{cls.year_column} = %s",
                     ]
-                    params: List[Any] = [
+                    params: list[Any] = [
                         data.get(cls.value_column),
                         data.get("year"),
                     ]
@@ -286,8 +288,9 @@ class DomainCRUD:
     @classmethod
     def api_delete(cls, id: int):
         """Delete a record, log audit, return JSON."""
-        from App.routes.login import admin_required
         from flask import jsonify
+
+        from App.routes.login import admin_required
 
         @admin_required
         def _delete():

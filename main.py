@@ -6,8 +6,8 @@ or Waitress production WSGI server otherwise.
 
 import os
 
-from App.routes import create_app
 from App.config import DEBUG
+from App.routes import create_app
 
 app = create_app()
 

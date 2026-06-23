@@ -1,12 +1,13 @@
 """Shared query helpers used across domain route modules."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from flask import session
+
 from App.db import get_db
 
 
-def get_countries() -> List[Dict[str, Any]]:
+def get_countries() -> list[dict[str, Any]]:
     """Return all countries as a list of dicts, ordered by name."""
     conn = get_db()
     cur = conn.cursor(dictionary=True)
@@ -26,8 +27,8 @@ def get_indicators(
     table: str,
     id_column: str,
     name_column: str,
-    extra_columns: Tuple[str, ...] = (),
-) -> List[Dict[str, Any]]:
+    extra_columns: tuple[str, ...] = (),
+) -> list[dict[str, Any]]:
     """Return indicators from *table* with the given column names."""
     cols = ", ".join((id_column, name_column) + extra_columns)
     conn = get_db()
@@ -39,11 +40,11 @@ def get_indicators(
 
 
 def build_sort_clause(
-    sort_map: Dict[str, str],
+    sort_map: dict[str, str],
     default: str,
     sort_by: Optional[str] = None,
     order: Optional[str] = None,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Return a safe (column, direction) pair from whitelisted *sort_map*."""
     column = sort_map.get(sort_by or "", default)
     direction = "ASC" if (order or "").upper() == "ASC" else "DESC"

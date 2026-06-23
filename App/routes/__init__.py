@@ -7,14 +7,13 @@ from datetime import timedelta
 from flask import (
     Flask,
     abort,
+    redirect,
     request,
     send_from_directory,
     session,
     url_for,
-    redirect,
 )
 
-from App.db import close_db
 from App.config import (
     PERMANENT_SESSION_LIFETIME,
     SECRET_KEY,
@@ -22,6 +21,7 @@ from App.config import (
     SESSION_COOKIE_SAMESITE,
     SESSION_COOKIE_SECURE,
 )
+from App.db import close_db
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REACT_DIST = os.path.join(BASE_DIR, "react", "dist")
@@ -101,8 +101,8 @@ def create_app() -> Flask:
         return response
 
     # ---- Blueprints ----
-    from App.routes.login import login_bp   # /auth/login, /auth/logout
-    from App.routes.api import api_bp       # /api/*  (all JSON endpoints)
+    from App.routes.api import api_bp  # /api/*  (all JSON endpoints)
+    from App.routes.login import login_bp  # /auth/login, /auth/logout
 
     app.register_blueprint(api_bp)
     app.register_blueprint(login_bp)

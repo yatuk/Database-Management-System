@@ -34,15 +34,10 @@ def client(app):
 
 @pytest.fixture
 def csrf_token(client):
-    """Get a valid CSRF token by making a GET request first."""
-    response = client.get("/auth/login")
-    csrf = None
-    # Extract token from session cookie
-    from flask import session
-
+    """Get a valid CSRF token by hitting /api/auth/me."""
+    client.get("/api/auth/me")
     with client.session_transaction() as sess:
-        csrf = sess.get("csrf_token", "")
-    return csrf
+        return sess.get("csrf_token", "")
 
 
 @pytest.fixture

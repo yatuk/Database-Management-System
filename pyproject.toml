@@ -25,6 +25,10 @@ ignore = [
     "B904",  # raise without from e
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]       # sys.path must come before App imports
+"migrations/versions/*.py" = []  # alembic-generated, lenient
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

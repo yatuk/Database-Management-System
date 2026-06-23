@@ -11,8 +11,8 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from App.routes import create_app  # type: ignore
-from App.db import get_db
+from App.db import get_db  # noqa: E402
+from App.routes import create_app  # noqa: E402  # type: ignore
 
 logger = logging.getLogger(__name__)
 
