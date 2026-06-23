@@ -11,6 +11,7 @@
     <a href="#"><img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&style=flat-square" alt="Bootstrap 5.3" /></a>
     <a href="#"><img src="https://img.shields.io/badge/Chart.js-4.4-FF6384?logo=chart.js&style=flat-square" alt="Chart.js 4.4" /></a>
     <a href="#"><img src="https://img.shields.io/badge/License-Educational-yellow?style=flat-square" alt="License: Educational" /></a>
+    <a href="https://github.com/yatuk/Database-Management-System/actions/workflows/ci.yml"><img src="https://github.com/yatuk/Database-Management-System/actions/workflows/ci.yml/badge.svg?style=flat-square" alt="CI" /></a>
   </p>
 
   <br />

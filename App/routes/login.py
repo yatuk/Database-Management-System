@@ -14,6 +14,8 @@ from flask import (
     abort,
 )
 
+from werkzeug.security import check_password_hash
+
 from App.db import get_db
 
 login_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -80,6 +82,7 @@ def admin_required(f: Callable) -> Callable:
 def login():
     if request.method == "POST":
         entered_number = request.form.get("student_number", "").strip()
+        entered_password = request.form.get("password", "").strip()
 
         if not entered_number:
             flash("Please enter a student number.", "danger")
@@ -90,7 +93,7 @@ def login():
 
         cur.execute(
             """
-            SELECT student_id, student_number, full_name, team_no
+            SELECT student_id, student_number, full_name, team_no, password_hash
             FROM students
             WHERE student_number = %s
             """,
@@ -109,6 +112,18 @@ def login():
         if team_no not in (1, 2):
             flash("You do not have permission to sign in.", "danger")
             return redirect(url_for("auth.login"))
+
+        # Password verification
+        password_hash = student.get("password_hash")
+        if password_hash:
+            # Hash exists: verify against it
+            if not entered_password:
+                flash("Please enter your password.", "danger")
+                return redirect(url_for("auth.login"))
+            if not check_password_hash(password_hash, entered_password):
+                flash("Invalid password.", "danger")
+                return redirect(url_for("auth.login"))
+        # If no password_hash is set, skip password check (backward compat)
 
         # Save login session
         session["student_id"] = student["student_id"]

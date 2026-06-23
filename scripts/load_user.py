@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+from werkzeug.security import generate_password_hash
+
 # Add project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
@@ -14,6 +16,8 @@ from App.db import get_db
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PASSWORD = "password"
+
 
 def seed_students() -> None:
     """
@@ -21,16 +25,20 @@ def seed_students() -> None:
 
     Admins: team_no = 1
     Editor: student_number = 5454, team_no = 2
+    All accounts get a default hashed password.
     """
     db = get_db()
     cur = db.cursor()
 
+    hashed = generate_password_hash(DEFAULT_PASSWORD)
+
     sql = """
-        INSERT INTO students (student_number, full_name, team_no)
-        VALUES (%s, %s, %s)
+        INSERT INTO students (student_number, full_name, team_no, password_hash)
+        VALUES (%s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
           full_name = VALUES(full_name),
-          team_no   = VALUES(team_no)
+          team_no   = VALUES(team_no),
+          password_hash = VALUES(password_hash)
     """
 
     rows = [
@@ -45,11 +53,15 @@ def seed_students() -> None:
     ]
 
     for sn, name, team in rows:
-        cur.execute(sql, (sn, name, team))
+        cur.execute(sql, (sn, name, team, hashed))
 
     db.commit()
     cur.close()
-    logger.info("Successfully seeded %d student accounts.", len(rows))
+    logger.info(
+        "Successfully seeded %d student accounts (default password: %s).",
+        len(rows),
+        DEFAULT_PASSWORD,
+    )
 
 
 if __name__ == "__main__":

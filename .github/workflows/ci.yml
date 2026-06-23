@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v1
+        with:
+          args: "check App/ scripts/ tests/"
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: test_pass
+      SECRET_KEY: ci-test-key-32-chars-minimum
+      FLASK_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v --tb=short
