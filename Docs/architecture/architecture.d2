@@ -1,0 +1,65 @@
+direction: right
+
+# ── Client ──
+client: {
+  Browser
+  (HTML5 + Bootstrap 5.3 + Chart.js)
+}
+
+# ── Application ──
+flask: {
+  Flask App (:5000)
+  main.py -> create_app()
+}
+
+# ── Internal Components ──
+
+blueprints: {
+  shape: cylinder
+  label: Blueprint Routes
+  dashboard | countries | ghg
+  health | energy | freshwater
+  sustainability | login | about
+}
+
+templates: {
+  shape: document
+  label: Jinja2 Templates
+  19 HTML files
+  frontend/css/templates/
+}
+
+db_layer: {
+  shape: class
+  label: DB Layer
+  get_db() -> flask.g
+  close_db() teardown
+}
+
+# ── Database ──
+mysql: {
+  shape: cylinder
+  label: MySQL 8.0 (:3306)
+  wdi_project
+  13 tables
+  InnoDB
+}
+
+# ── Data Sources ──
+
+csv: {
+  shape: document
+  label: CSV Data
+  11 files in Data/
+  World Bank WDI
+}
+
+# ── Connections ──
+
+client -> flask: "HTTP :5000"
+flask -> blueprints: "register"
+flask -> db_layer: request context
+blueprints -> templates: render_template()
+flask -> templates: context processors
+db_layer -> mysql: mysql-connector-python
+csv -> mysql: "scripts/load_all.py"

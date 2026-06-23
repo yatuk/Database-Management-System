@@ -1,0 +1,200 @@
+direction: right
+
+# ── Core Tables ──
+
+countries: {
+  shape: sql_table
+  # PK
+  country_id: int {constraint: PK}
+  country_name: varchar(100) {constraint: UNIQUE}
+  country_code: varchar(3) {constraint: UNIQUE}
+  region: varchar(100)
+  created_at: timestamp
+  updated_at: timestamp
+}
+
+students: {
+  shape: sql_table
+  # PK
+  student_id: int {constraint: PK}
+  student_number: varchar(20) {constraint: UNIQUE}
+  full_name: varchar(100)
+  team_no: int
+}
+
+audit_logs: {
+  shape: sql_table
+  # PK
+  log_id: int {constraint: PK}
+  student_id: int {constraint: FK}
+  action_type: varchar(50)
+  table_name: varchar(50)
+  record_id: int
+  action_timestamp: timestamp
+}
+
+# ── GHG Emissions Domain ──
+
+ghg_indicator_details: {
+  shape: sql_table
+  # PK
+  ghg_indicator_id: int {constraint: PK}
+  indicator_name: varchar(255) {constraint: UNIQUE}
+  indicator_description: varchar(200)
+  unit_symbol: varchar(20)
+}
+
+greenhouse_emissions: {
+  shape: sql_table
+  # PK
+  row_id: int {constraint: PK}
+  country_id: int {constraint: FK}
+  ghg_indicator_id: int {constraint: FK}
+  indicator_value: int
+  share_of_total_pct: int
+  uncertainty_pct: int
+  year: int
+  source_notes: varchar(255)
+}
+
+# ── Health Domain ──
+
+health_indicator_details: {
+  shape: sql_table
+  # PK
+  health_indicator_id: int {constraint: PK}
+  indicator_name: varchar(100) {constraint: UNIQUE}
+  indicator_description: text
+  unit_symbol: varchar(20)
+}
+
+health_system: {
+  shape: sql_table
+  # PK
+  row_id: int {constraint: PK}
+  country_id: int {constraint: FK}
+  health_indicator_id: int {constraint: FK}
+  indicator_value: decimal(12,4)
+  year: int
+  source_notes: varchar(255)
+}
+
+# ── Energy Domain ──
+
+energy_indicator_details: {
+  shape: sql_table
+  # PK
+  energy_indicator_id: int {constraint: PK}
+  indicator_name: varchar(255) {constraint: UNIQUE}
+  indicator_code: varchar(50) {constraint: UNIQUE}
+  indicator_description: text
+  measurement_unit: varchar(50)
+}
+
+energy_data: {
+  shape: sql_table
+  # PK
+  data_id: int {constraint: PK}
+  country_id: int {constraint: FK}
+  energy_indicator_id: int {constraint: FK}
+  year: int
+  indicator_value: float
+  data_source: varchar(255)
+}
+
+# ── Freshwater Domain ──
+
+freshwater_indicator_details: {
+  shape: sql_table
+  # PK
+  freshwater_indicator_id: int {constraint: PK}
+  indicator_name: varchar(255) {constraint: UNIQUE}
+  description: text
+  unit_of_measure: varchar(100)
+}
+
+freshwater_data: {
+  shape: sql_table
+  # PK
+  data_id: int {constraint: PK}
+  country_id: int {constraint: FK}
+  freshwater_indicator_id: int {constraint: FK}
+  year: int
+  indicator_value: decimal(20,10)
+  source_notes: varchar(255)
+}
+
+# ── Sustainability Domain ──
+
+sustainability_indicator_details: {
+  shape: sql_table
+  # PK
+  sus_indicator_id: int {constraint: PK}
+  indicator_name: varchar(255) {constraint: UNIQUE}
+  indicator_code: varchar(50) {constraint: UNIQUE}
+  indicator_description: text
+  unit_symbol: varchar(50)
+}
+
+sustainability_data: {
+  shape: sql_table
+  # PK
+  data_id: int {constraint: PK}
+  country_id: int {constraint: FK}
+  sus_indicator_id: int {constraint: FK}
+  year: int
+  indicator_value: float
+  source_note: varchar(255)
+}
+
+# ── Relationships ──
+
+# students -> audit_logs
+students.student_id -> audit_logs.student_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+
+# countries -> domain fact tables
+countries.country_id -> greenhouse_emissions.country_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+countries.country_id -> health_system.country_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+countries.country_id -> energy_data.country_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+countries.country_id -> freshwater_data.country_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+countries.country_id -> sustainability_data.country_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+
+# indicator_details -> fact tables
+ghg_indicator_details.ghg_indicator_id -> greenhouse_emissions.ghg_indicator_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+health_indicator_details.health_indicator_id -> health_system.health_indicator_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+energy_indicator_details.energy_indicator_id -> energy_data.energy_indicator_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+freshwater_indicator_details.freshwater_indicator_id -> freshwater_data.freshwater_indicator_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}
+sustainability_indicator_details.sus_indicator_id -> sustainability_data.sus_indicator_id {
+  source-arrowhead: 1
+  target-arrowhead: *
+}

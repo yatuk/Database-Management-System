@@ -1,17 +1,32 @@
-# Database Management System
-
 <div align="center">
 
-**A comprehensive web-based database management and visualization platform for analyzing World Development Indicators (WDI) data across multiple domains**
+  <h1>Database Management System</h1>
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.0+-green?style=flat-square)](https://flask.palletsprojects.com/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange?style=flat-square)](https://www.mysql.com/)
-[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&style=flat-square)](https://getbootstrap.com/)
-[![Chart.js](https://img.shields.io/badge/Chart.js-4.4-FF6384?logo=chart.js&style=flat-square)](https://www.chartjs.org/)
-[![License](https://img.shields.io/badge/License-Educational-yellow?style=flat-square)](LICENSE)
+  <p><em>A comprehensive web-based database management and visualization platform for analyzing World Development Indicators (WDI) data across multiple domains</em></p>
 
-*Developed as a term project for **BLG-317E (Database Systems)** course*
+  <p>
+    <a href="#"><img src="https://img.shields.io/badge/Python-3.9+-blue?style=flat-square" alt="Python 3.9+" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Flask-2.0+-green?style=flat-square" alt="Flask 2.0+" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/MySQL-8.0+-orange?style=flat-square" alt="MySQL 8.0+" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&style=flat-square" alt="Bootstrap 5.3" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/Chart.js-4.4-FF6384?logo=chart.js&style=flat-square" alt="Chart.js 4.4" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/License-Educational-yellow?style=flat-square" alt="License: Educational" /></a>
+  </p>
+
+  <br />
+
+  <table>
+    <tr>
+      <td align="center"><strong>Python</strong><br/><code>Flask</code></td>
+      <td align="center"><strong>MySQL</strong><br/><code>InnoDB</code></td>
+      <td align="center"><strong>Jinja2</strong><br/><code>Templates</code></td>
+    </tr>
+    <tr>
+      <td align="center">Application Server<br/>+ Route Handlers</td>
+      <td align="center">Relational Database<br/>+ FK Constraints</td>
+      <td align="center">Server-Side Rendering<br/>+ Bootstrap 5.3</td>
+    </tr>
+  </table>
 
 </div>
 
@@ -19,77 +34,318 @@
 
 ---
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Architecture](#architecture)
-- [Database Schema](#database-schema)
-- [Installation](#installation)
-  - [Prerequisites](#prerequisites)
-  - [Step-by-Step Setup](#step-by-step-setup)
-  - [Environment Configuration](#environment-configuration)
-  - [Data Loading](#data-loading)
-- [Role-Based Access Control](#role-based-access-control)
-- [Data Domains](#data-domains)
-- [API Endpoints](#api-endpoints)
-- [Usage](#usage)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-
----
-
-## Overview
+## What is this project?
 
 This **Database Management System** provides an interactive platform for exploring, analyzing, and managing multi-domain indicator data from the World Development Indicators (WDI) dataset published by the World Bank. The system enables users to browse country-level and regional data, visualize trends through interactive charts and maps, perform cross-country comparisons, and manage data through role-based CRUD operations with full audit logging.
 
-| Capability | Description |
+| Your need | System's answer |
 |---|---|
-| **Multi-Domain Data Management** | Support for 6 data domains: Countries, Health, GHG Emissions, Energy, Freshwater, Sustainability |
-| **Interactive Dashboards** | Overview dashboards with key metrics and visualizations |
-| **Advanced Filtering** | Filter data by country, region, year, and indicator |
-| **Trend Analysis** | Automatic calculation of percentage changes and trends over time |
-| **Data Visualization** | Interactive line charts, global trend visualizations, regional comparisons, sparkline indicators |
-| **Geographic Visualization** | Interactive world map with country-level data |
-| **Data Export** | CSV export functionality for filtered datasets |
-| **Pagination** | Efficient handling of large datasets with configurable page sizes |
-| **Role-Based Access Control** | Three distinct user roles (Admin, Editor, Viewer) with granular permissions |
-| **Audit Logging** | Track data modifications with user attribution |
+| Browse WDI data across domains | 6 domains: Countries, Health, GHG, Energy, Freshwater, Sustainability |
+| Visualize trends over time | Interactive line charts, sparklines, global trend views (Chart.js 4.4) |
+| Geographic exploration | Interactive world map with country-level data availability |
+| Control who edits data | Role-Based Access Control: Admin, Editor, Viewer |
+| Track data changes | Full audit logging with user attribution |
+| Export filtered data | CSV export with current filter state preserved |
+
+> **Developed as a term project for BLG-317E (Database Systems) at Istanbul Technical University.**
+
+---
+
+## Architecture
+
+```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#1e3a5f',
+    'primaryTextColor': '#dbeafe',
+    'primaryBorderColor': '#3b82f6',
+    'lineColor': '#6b7280',
+    'background': '#0f172a',
+    'mainBkg': '#1e293b'
+  }
+}}%%
+graph TB
+    subgraph "Client"
+        Browser[Web Browser<br/>HTML5 + Bootstrap 5.3 + Chart.js]
+    end
+
+    subgraph "Flask Application (:5000)"
+        Factory[Application Factory<br/>create_app]
+        Blueprints[Blueprint Routes]
+        Templates[Jinja2 Templates<br/>19 HTML files]
+        DB_Layer[DB Connection Layer<br/>request-scoped via flask.g]
+    end
+
+    subgraph "Data"
+        MySQL[(MySQL 8.0<br/>wdi_project<br/>13 tables / InnoDB)]
+        CSV[CSV Data Files<br/>11 files / World Bank WDI]
+    end
+
+    subgraph "Scripts"
+        Loader[load_all.py<br/>Bulk CSV Ingestion]
+        Seed[load_user.py<br/>User Account Seeding]
+    end
+
+    Browser -->|"HTTP :5000"| Factory
+    Factory -->|register| Blueprints
+    Blueprints -->|render_template| Templates
+    Factory -->|request context| DB_Layer
+    DB_Layer -->|mysql-connector-python| MySQL
+    Factory -->|context processors| Templates
+    CSV -->|read| Loader
+    Loader -->|INSERT| MySQL
+    Seed -->|UPSERT| MySQL
+
+    classDef client fill:#1e3a5f,stroke:#3b82f6,color:#dbeafe
+    classDef app fill:#0d3a3a,stroke:#14b8a6,color:#ccfbf1
+    classDef data fill:#2d1b4e,stroke:#a855f7,color:#e9d5ff
+    classDef script fill:#3a2d0a,stroke:#f59e0b,color:#fef3c7
+
+    class Browser client
+    class Factory,Blueprints,Templates,DB_Layer app
+    class MySQL,CSV data
+    class Loader,Seed script
+```
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Flask Application (:5000)                                │
+│                                                          │
+│  ┌────────────┐    ┌──────────────┐    ┌─────────────┐  │
+│  │  Factory   │───>│  Blueprints  │    │  Templates  │  │
+│  │  create_app│    │  9 modules   │    │  19 files   │  │
+│  └─────┬──────┘    └──────────────┘    └──────────────┘  │
+│        │                                                 │
+│        ▼                                                 │
+│  ┌──────────┐                                           │
+│  │ DB Layer │  get_db() / close_db()                     │
+│  │ flask.g  │  request-scoped connections                │
+│  └────┬─────┘                                           │
+└───────┼─────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────┐     ┌──────────────┐
+│ MySQL 8.0 │     │ CSV Loader   │
+│ :3306     │<────│ load_all.py  │
+└───────────┘     └──────────────┘
+        ▲
+        │ HTTPS :5000
+   ┌────┴────┐
+   │ Browser │
+   └─────────┘
+```
+
+View the [D2 source](docs/architecture/architecture.d2).
+
+### Component details
+
+| Component | Language | Role | Key Files |
+|---|---|---|---|
+| **Application Factory** | Python | Flask app creation, blueprint registration, context processors | `App/routes/__init__.py` |
+| **Route Handlers** | Python | Domain-specific CRUD, filtering, pagination, chart data APIs | `App/routes/*.py` |
+| **Database Layer** | Python | Request-scoped MySQL connections, teardown hooks | `App/db.py`, `App/db_setup.py` |
+| **Templates** | Jinja2/HTML | Responsive UI with Bootstrap 5.3 and Chart.js 4.4 | `frontend/css/templates/` |
+| **Data Loader** | Python | CSV ingestion with deduplication and FK remapping | `scripts/load_all.py` |
+| **User Seeder** | Python | Student account creation with role assignment | `scripts/load_user.py` |
+
+---
+
+## Database Schema
+
+```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#1e3a5f',
+    'primaryTextColor': '#dbeafe',
+    'primaryBorderColor': '#3b82f6',
+    'lineColor': '#6b7280',
+    'background': '#0f172a',
+    'mainBkg': '#1e293b'
+  }
+}}%%
+erDiagram
+    students ||--o{ audit_logs : "logs"
+    countries ||--o{ greenhouse_emissions : "has"
+    countries ||--o{ health_system : "has"
+    countries ||--o{ energy_data : "has"
+    countries ||--o{ freshwater_data : "has"
+    countries ||--o{ sustainability_data : "has"
+    ghg_indicator_details ||--o{ greenhouse_emissions : "defines"
+    health_indicator_details ||--o{ health_system : "defines"
+    energy_indicator_details ||--o{ energy_data : "defines"
+    freshwater_indicator_details ||--o{ freshwater_data : "defines"
+    sustainability_indicator_details ||--o{ sustainability_data : "defines"
+
+    countries {
+        int country_id PK
+        varchar country_name UK
+        varchar country_code UK
+        varchar region
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    students {
+        int student_id PK
+        varchar student_number UK
+        varchar full_name
+        int team_no
+    }
+
+    audit_logs {
+        int log_id PK
+        int student_id FK
+        varchar action_type
+        varchar table_name
+        int record_id
+        timestamp action_timestamp
+    }
+
+    greenhouse_emissions {
+        int row_id PK
+        int country_id FK
+        int ghg_indicator_id FK
+        int indicator_value
+        int share_of_total_pct
+        int uncertainty_pct
+        int year
+        varchar source_notes
+    }
+
+    ghg_indicator_details {
+        int ghg_indicator_id PK
+        varchar indicator_name UK
+        varchar indicator_description
+        varchar unit_symbol
+    }
+
+    health_system {
+        int row_id PK
+        int country_id FK
+        int health_indicator_id FK
+        decimal indicator_value
+        int year
+        varchar source_notes
+    }
+
+    health_indicator_details {
+        int health_indicator_id PK
+        varchar indicator_name UK
+        text indicator_description
+        varchar unit_symbol
+    }
+
+    energy_data {
+        int data_id PK
+        int country_id FK
+        int energy_indicator_id FK
+        int year
+        float indicator_value
+        varchar data_source
+    }
+
+    energy_indicator_details {
+        int energy_indicator_id PK
+        varchar indicator_name UK
+        varchar indicator_code UK
+        text indicator_description
+        varchar measurement_unit
+    }
+
+    freshwater_data {
+        int data_id PK
+        int country_id FK
+        int freshwater_indicator_id FK
+        int year
+        decimal indicator_value
+        varchar source_notes
+    }
+
+    freshwater_indicator_details {
+        int freshwater_indicator_id PK
+        varchar indicator_name UK
+        text description
+        varchar unit_of_measure
+    }
+
+    sustainability_data {
+        int data_id PK
+        int country_id FK
+        int sus_indicator_id FK
+        int year
+        float indicator_value
+        varchar source_note
+    }
+
+    sustainability_indicator_details {
+        int sus_indicator_id PK
+        varchar indicator_name UK
+        varchar indicator_code UK
+        text indicator_description
+        varchar unit_symbol
+    }
+```
+
+View the [D2 source](docs/architecture/database-schema.d2).
+
+### Table Summary
+
+| Table | Rows (approx.) | Description |
+|---|---|---|
+| `countries` | 250+ | Country master data with ISO3 codes and regional classification |
+| `students` | 6 | User accounts with role assignments via `team_no` |
+| `audit_logs` | variable | CRUD operation audit trail with user attribution |
+| `greenhouse_emissions` | 8,000+ | CO2 total, CO2 per capita, total GHG by country/year |
+| `health_system` | 25,000+ | Health indicators (life expectancy, mortality, etc.) |
+| `energy_data` | 15,000+ | Energy consumption, production, renewable indicators |
+| `freshwater_data` | 3,000+ | Freshwater resources, withdrawal, quality metrics |
+| `sustainability_data` | 20,000+ | Environmental sustainability and resource management |
+
+Each domain follows a consistent normalized pattern: a fact table referencing `countries` with a companion `*_indicator_details` lookup table. Unique constraints on `(country_id, indicator_id, year)` prevent duplicate records.
+
+See `SQL/database.sql` for the complete DDL with all constraints and relationships.
 
 ---
 
 ## Features
 
-### Core Functionality
-
-| Category | Capability | Details |
+| Category | Capability | Action |
 |---|---|---|
 | **Data Management** | Browse, filter, search, add, edit, delete | Full CRUD with role-based restrictions |
-| **Visualization** | Line charts, maps, sparklines | Built with Chart.js 4.4 |
-| **Filtering** | Country, region, year, indicator | Multi-criteria with dynamic dropdowns |
+| **Visualization** | Line charts, bar charts, world map, sparklines | Chart.js 4.4 + Leaflet |
+| **Filtering** | Country, region, year range, indicator, latest year only | Multi-criteria with dynamic dropdowns |
 | **Search** | Full-text search across countries and indicators | Case-insensitive, partial match |
 | **Pagination** | Server-side pagination | 50 records per page |
-| **Export** | CSV download | Export filtered datasets |
-| **Trend Analysis** | Percentage change, year-over-year comparison | Automatic calculation |
-| **Regional Aggregation** | Region-level statistics | AVG, MIN, MAX, country count per region |
+| **Export** | CSV download | Export filtered datasets with current state |
+| **Trend Analysis** | Percentage change, year-over-year comparison | Automatic calculation per indicator |
+| **Regional Aggregation** | AVG, MIN, MAX, country count per region | 5 domains, grouped by year |
+| **Country Profiles** | Per-country data across all 5 domains | Joined queries with 500-row limit |
+| **Region Profiles** | Aggregated statistics across all domains | Ranked country listing with CO2 metrics |
 
-### Security & Access Control
+### Role-Based Access Control
 
-| Role | Permissions | Team Number |
-|---|---|---|
-| **Admin** | Full CRUD access, delete records, manage users | `team_no = 1` |
-| **Editor** | Add and edit records, cannot delete | `team_no = 2` |
-| **Viewer** | Read-only access to all dashboards and data | Default (unauthenticated) |
+| Role | `team_no` | Create | Read | Update | Delete |
+|---|---|---|---|---|---|
+| **Admin** | `1` | Yes | Yes | Yes | Yes |
+| **Editor** | `2` | Yes | Yes | Yes | No |
+| **Viewer** | Default | No | Yes | No | No |
 
-### User Experience
+The current user's role is injected into all templates via Flask context processors, making `current_role`, `is_admin`, `is_editor`, and `is_viewer` available in every Jinja2 template for UI-level access control.
 
-- **Responsive Design**: Works seamlessly on desktop and tablet devices
-- **Smooth Animations**: Subtle UI animations for enhanced user experience
-- **Tooltips & Helpers**: Contextual information throughout the interface
-- **Search Functionality**: Quick search across countries and indicators
+Route protection is enforced via decorator functions:
+
+```python
+# App/routes/login.py
+@editor_required   # Requires team_no in (1, 2)
+def add_record():
+    ...
+
+@admin_required    # Requires team_no == 1
+def delete_record():
+    ...
+```
 
 ---
 
@@ -117,13 +373,19 @@ This **Database Management System** provides an interactive platform for explori
     <td><strong>Database</strong></td>
     <td>
       <img src="https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white" alt="MySQL" />
-      &nbsp; InnoDB, foreign key constraints, composite unique keys
+      &nbsp; InnoDB engine, foreign key constraints, composite unique keys
     </td>
   </tr>
   <tr>
     <td><strong>Database Connector</strong></td>
     <td>
-      <img src="https://img.shields.io/badge/mysql--connector--python-Latest-4479A1?logo=python&logoColor=white" alt="mysql-connector-python" />
+      <img src="https://img.shields.io/badge/mysql--connector--python-latest-4479A1?logo=python&logoColor=white" alt="mysql-connector-python" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Environment Config</strong></td>
+    <td>
+      <img src="https://img.shields.io/badge/python--dotenv-latest-ECD53F?logo=python&logoColor=white" alt="python-dotenv" />
     </td>
   </tr>
   <tr>
@@ -147,15 +409,9 @@ This **Database Management System** provides an interactive platform for explori
     </td>
   </tr>
   <tr>
-    <td><strong>Template Engine</strong></td>
+    <td><strong>Templating</strong></td>
     <td>
       <img src="https://img.shields.io/badge/Jinja2-Flask-000000?logo=jinja&logoColor=white" alt="Jinja2" />
-    </td>
-  </tr>
-  <tr>
-    <td><strong>Configuration</strong></td>
-    <td>
-      <img src="https://img.shields.io/badge/python--dotenv-✓-ECD53F?logo=python&logoColor=white" alt="python-dotenv" />
     </td>
   </tr>
 </table>
@@ -180,7 +436,7 @@ Database-Management-System/
 │   │   └── about.py             # About page with team member listing
 │   ├── db.py                    # Database connection utilities (request-scoped)
 │   └── db_setup.py              # Database creation and schema initialization
-├── Data/                        # CSV data files
+├── Data/                        # CSV data files (World Bank WDI)
 │   ├── countries.csv
 │   ├── greenhouse_emissions.csv
 │   ├── health_system.csv
@@ -191,9 +447,13 @@ Database-Management-System/
 ├── SQL/                         # SQL scripts
 │   ├── database.sql             # Full database schema (DDL)
 │   └── load_*.sql               # Per-table data loading scripts
+├── docs/
+│   └── architecture/            # Architecture diagrams
+│       ├── architecture.d2      # D2 system architecture source
+│       └── database-schema.d2   # D2 database schema source
 ├── frontend/
 │   ├── css/
-│   │   ├── style.css            # Global styles (~6400 lines)
+│   │   ├── style.css            # Global styles
 │   │   └── templates/           # Jinja2 HTML templates (19 files)
 │   │       ├── base.html        # Base layout with navbar and footer
 │   │       ├── dashboard.html   # Dashboard overview
@@ -201,7 +461,7 @@ Database-Management-System/
 │   │       ├── country_profile.html
 │   │       ├── country_no_data.html
 │   │       ├── region_profile.html
-│   │       ├── ghg_list.html
+│   │       ├── ghg_list.html    # 65K, most complex template
 │   │       ├── ghg_form.html
 │   │       ├── health_list.html
 │   │       ├── health_form.html
@@ -213,144 +473,22 @@ Database-Management-System/
 │   │       ├── sustainability_form.html
 │   │       ├── login.html
 │   │       ├── about.html
-│   │       └── index.html
+│   │       ├── index.html
+│   │       └── navbar.html
 ├── scripts/                     # Utility scripts
-│   ├── load_all.py              # Bulk CSV data loader with deduplication
-│   ├── load_user.py             # Seed user accounts
-│   └── load_countries.py        # Country data loader
+│   ├── load_all.py              # Bulk CSV loader with dedup and FK remapping
+│   ├── load_user.py             # Seed admin/editor accounts
+│   └── load_countries.py        # Country-specific loader
+├── flask_app/                   # Alternative minimal Flask app
+│   ├── server.py
+│   ├── app/
+│   ├── static/
+│   └── templates/
 ├── main.py                      # Application entry point
-├── requirements.txt             # Python dependencies
+├── requirements.txt             # Python dependencies (3 packages)
+├── .python-version              # Python version pin (3.9.18)
 └── .env                         # Environment variables (user-created)
 ```
-
----
-
-## Architecture
-
-### Request Flow
-
-```
-Client (Browser)
-      │
-      ▼
-┌─────────────┐
-│  Flask App  │  main.py -> create_app()
-│  :5000      │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐     ┌──────────────┐
-│  Blueprint  │────>│  Template    │
-│  Routes     │     │  Rendering   │
-└──────┬──────┘     └──────────────┘
-       │
-       ▼
-┌─────────────┐
-│  get_db()   │  Request-scoped connection via flask.g
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  MySQL      │  wdi_project database
-│  :3306      │  13 tables, InnoDB, FK constraints
-└─────────────┘
-```
-
-### Component Details
-
-| Component | Language | Role | Key Files |
-|---|---|---|---|
-| **Application Factory** | Python | Flask app creation, blueprint registration, context processors | `App/routes/__init__.py` |
-| **Database Layer** | Python | Connection pooling (request-scoped), teardown hooks | `App/db.py`, `App/db_setup.py` |
-| **Route Handlers** | Python | Domain-specific CRUD, filtering, pagination, chart data | `App/routes/*.py` |
-| **Templates** | Jinja2/HTML | Responsive UI with Bootstrap 5.3 and Chart.js 4.4 | `frontend/css/templates/` |
-| **Data Loader** | Python | CSV ingestion with deduplication, foreign key remapping | `scripts/load_all.py` |
-| **MySQL Database** | SQL | Schema, constraints, relationships | `SQL/database.sql` |
-
----
-
-## Database Schema
-
-### Entity-Relationship Overview
-
-```
-┌───────────┐       ┌──────────────────────────┐
-│  students │       │      audit_logs           │
-├───────────┤       ├──────────────────────────┤
-│ PK student_id────>│ FK student_id             │
-│    student_number │    action_type             │
-│    full_name      │    table_name              │
-│    team_no        │    record_id               │
-└───────────┘       │    action_timestamp        │
-                    └──────────────────────────┘
-
-┌───────────┐       ┌──────────────────────────┐
-│ countries │       │   health_system           │
-├───────────┤       ├──────────────────────────┤
-│ PK country_id────>│ FK country_id             │
-│    country_name   │ FK health_indicator_id────┐
-│    country_code   │    indicator_value         │
-│    region         │    year                    │
-└───────────┘       │    source_notes            │
-        │           └──────────────────────────┘
-        │           ┌──────────────────────────┐
-        │           │ health_indicator_details  │
-        │           ├──────────────────────────┤
-        ├──────────>│ PK health_indicator_id────┘
-        │           │    indicator_name
-        │           │    indicator_description
-        │           │    unit_symbol
-        │           └──────────────────────────┘
-        │
-        │           ┌──────────────────────────┐
-        │           │   greenhouse_emissions    │
-        │           ├──────────────────────────┤
-        ├──────────>│ FK country_id             │
-        │           │ FK ghg_indicator_id───────┐
-        │           │    indicator_value         │
-        │           │    share_of_total_pct      │
-        │           │    uncertainty_pct         │
-        │           │    year                    │
-        │           │    source_notes            │
-        │           └──────────────────────────┘
-        │           ┌──────────────────────────┐
-        │           │  ghg_indicator_details    │
-        │           ├──────────────────────────┤
-        │           │ PK ghg_indicator_id───────┘
-        │           │    indicator_name
-        │           │    indicator_description
-        │           │    unit_symbol
-        │           └──────────────────────────┘
-        │
-        │   (same pattern repeats for energy_data, freshwater_data,
-        │    sustainability_data with their respective indicator_detail tables)
-        │
-        └──────────> (energy_data + energy_indicator_details)
-        └──────────> (freshwater_data + freshwater_indicator_details)
-        └──────────> (sustainability_data + sustainability_indicator_details)
-```
-
-### Core Tables
-
-| Table | Description | Key Constraints |
-|---|---|---|
-| `countries` | Country information (name, code, region) | `country_name` UNIQUE, `country_code` UNIQUE |
-| `students` | User accounts with role assignments | `student_number` UNIQUE |
-| `audit_logs` | Track data modifications with user attribution | FK to `students` |
-
-### Domain Tables
-
-Each domain follows a consistent normalized pattern: a fact table referencing `countries` and a detail table storing indicator metadata.
-
-| Domain | Fact Table | Detail Table | Unique Constraint |
-|---|---|---|---|
-| Health | `health_system` | `health_indicator_details` | `(country_id, health_indicator_id, year)` |
-| GHG Emissions | `greenhouse_emissions` | `ghg_indicator_details` | `(country_id, ghg_indicator_id, year)` |
-| Energy | `energy_data` | `energy_indicator_details` | `(country_id, energy_indicator_id, year)` |
-| Freshwater | `freshwater_data` | `freshwater_indicator_details` | `(country_id, freshwater_indicator_id, year)` |
-| Sustainability | `sustainability_data` | `sustainability_indicator_details` | `(country_id, sus_indicator_id, year)` |
-
-See `SQL/database.sql` for the complete schema definition with all relationships and constraints.
 
 ---
 
@@ -358,25 +496,19 @@ See `SQL/database.sql` for the complete schema definition with all relationships
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-
 - **Python 3.9 or higher** -- [Download Python](https://www.python.org/downloads/)
 - **MySQL 8.0 or higher** -- [Download MySQL](https://dev.mysql.com/downloads/mysql/)
 - **pip** -- Python package manager (included with Python)
 - **Git** -- [Download Git](https://git-scm.com/downloads)
 
-### Step-by-Step Setup
-
-#### Step 1: Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/yatuk/Database-Management-System.git
 cd Database-Management-System
 ```
 
-#### Step 2: Create Virtual Environment
-
-Create and activate a virtual environment to isolate project dependencies:
+### Step 2: Create Virtual Environment
 
 **Windows:**
 ```bash
@@ -390,38 +522,20 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-> **Note**: If you encounter execution policy issues on Windows PowerShell, run:
+> If you encounter execution policy issues on Windows PowerShell:
 > ```powershell
 > Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 > ```
 
-#### Step 3: Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-#### Step 4: Set Up MySQL Database
+### Step 4: Configure Environment
 
-1. **Start MySQL Server** (if not already running)
-
-2. **Create the Database:**
-   ```sql
-   CREATE DATABASE wdi_project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
-
-3. **Run the Database Schema Script:**
-   ```bash
-   # Windows
-   mysql -u root -p wdi_project < SQL/database.sql
-
-   # Linux/Mac
-   mysql -u root -p wdi_project < SQL/database.sql
-   ```
-
-### Environment Configuration
-
-Create a `.env` file in the project root directory with your database credentials:
+Create a `.env` file in the project root:
 
 ```env
 DB_HOST=localhost
@@ -432,195 +546,38 @@ DB_PORT=3306
 SECRET_KEY=your_secret_key_here
 ```
 
-The application automatically loads these environment variables using `python-dotenv`.
-
-### Data Loading
-
-Data loading must be performed in the correct order for the application to work properly.
-
-#### Step 5: Load All Data (Run First)
-
-This script creates the database schema and loads all CSV data files. **This must be run BEFORE loading users.**
+### Step 5: Create and Populate Database
 
 ```bash
-# Using venv Python (recommended)
+# Create the database in MySQL
+mysql -u root -p -e "CREATE DATABASE wdi_project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Load schema and all CSV data (must run first)
 python scripts/load_all.py
-```
 
-**What this script does:**
-- Drops and recreates the database schema
-- Loads all CSV files from the `Data/` directory:
-  - Countries data
-  - GHG emissions data and indicators
-  - Health system data and indicators
-  - Energy data and indicators
-  - Freshwater data and indicators
-  - Sustainability data and indicators
-- Handles data deduplication and foreign key relationships
-- Disables foreign key checks during bulk loading for performance
-
-#### Step 6: Load User Accounts (Run Second)
-
-After loading all data, seed the user accounts. **This must be run AFTER load_all.py.**
-
-```bash
+# Seed user accounts (must run second)
 python scripts/load_user.py
 ```
 
-**What this script does:**
-- Creates user accounts in the `students` table
-- Sets up admin users (`team_no = 1`):
-  - `820230313` - Salih Sefer
-  - `820230334` - Atahan Evintan
-  - `820230326` - Fatih Serdar Cakmak
-  - `820230314` - Muhammet Tuncer
-  - `150210085` - Gulbahar Karabas
-- Sets up editor user (`team_no = 2`):
-  - `5454` - Editor User
+> **Why this order matters:** `load_all.py` creates the schema and loads domain data. `load_user.py` requires existing tables. Reversing the order will fail.
 
-> **Why this order matters:**
-> `load_all.py` creates the database schema and loads all domain data. `load_user.py` requires the database and tables to exist. Running them in reverse order will fail.
+### Step 6: Start the Application
 
----
-
-## Role-Based Access Control
-
-The system uses the `team_no` field in the `students` table to determine user roles. Authentication is based on student number only for this educational project.
-
-### Role Definitions
-
-| Role | `team_no` | Create | Read | Update | Delete | Notes |
-|---|---|---|---|---|---|---|
-| **Admin** | `1` | Yes | Yes | Yes | Yes | Full system access |
-| **Editor** | `2` | Yes | Yes | Yes | No | Cannot delete records |
-| **Viewer** | Default | No | Yes | No | No | Read-only, unauthenticated users |
-
-### Implementation
-
-```python
-# Route protection decorators (App/routes/login.py)
-
-@editor_required   # Requires team_no in (1, 2)
-def add_record():
-    ...
-
-@admin_required    # Requires team_no == 1
-def delete_record():
-    ...
+```bash
+python main.py
 ```
 
-The current user's role is injected into all templates via `@app.context_processor`, making `current_role`, `is_admin`, `is_editor`, and `is_viewer` available in every Jinja2 template for UI-level access control.
-
----
-
-## Data Domains
-
-### 1. Countries
-- Country profiles with comprehensive statistics across all domains
-- Regional aggregations with AVG, MIN, MAX, and country counts
-- Interactive world map visualization with data availability indicators
-- ISO2-to-ISO3 code mapping for geographic lookups
-- Country comparison tools
-
-### 2. GHG Emissions
-- CO2 total emissions (`ghg_indicator_id = 5`)
-- CO2 per capita (`ghg_indicator_id = 6`)
-- Total greenhouse gas emissions (`ghg_indicator_id = 1`)
-- Trend analysis with percentage changes
-- Global CO2 per capita trend visualization
-- Share of total percentage and uncertainty metrics
-
-### 3. Health
-- Health system indicators and population health metrics
-- Cross-country health comparisons
-- Indicator-specific year range filtering
-
-### 4. Energy
-- Energy consumption and production data
-- Multiple energy indicators with measurement units
-- Renewable energy indicators via `energy_indicator_details`
-
-### 5. Freshwater
-- Freshwater resource availability and usage metrics
-- Water quality indicators
-- Source notes for traceability
-
-### 6. Sustainability
-- Environmental sustainability metrics
-- Resource management indicators
-- Long-term sustainability trends
-- Indicator codes for programmatic access
-
----
-
-## API Endpoints
-
-### Authentication
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/auth/login` | None | Login page |
-| `POST` | `/auth/login` | None | Authenticate with student number |
-| `GET` | `/auth/logout` | None | Clear session and redirect to login |
-
-### Dashboard
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/dashboard` | None | Main dashboard with domain coverage stats |
-
-### Countries
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/countries/` | None | List all countries with search and data availability |
-| `GET` | `/countries/profile/<id>` | None | Country profile with all domain data |
-| `GET` | `/countries/region/<name>` | None | Region profile with aggregated statistics |
-| `GET` | `/countries/resolve/<iso2>` | None | Resolve ISO2 code to country profile |
-| `GET` | `/countries/api/stats` | None | Global statistics (JSON) |
-| `GET` | `/countries/api/region-stats` | None | Region statistics (JSON) |
-| `GET` | `/countries/api/has-data/<iso2>` | None | Data availability check (JSON) |
-
-### Domain CRUD Endpoints
-
-Each domain (GHG, Health, Energy, Freshwater, Sustainability) follows a consistent pattern:
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/<domain>/` | None | List records with filtering and pagination |
-| `GET` | `/<domain>/api/get/<id>` | None | Get single record (JSON) |
-| `POST` | `/<domain>/api/add` | Editor/Admin | Add new record |
-| `POST` | `/<domain>/api/edit/<id>` | Editor/Admin | Edit existing record |
-| `POST` | `/<domain>/api/delete/<id>` | Admin | Delete record |
-
-### About
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/about` | None | About page with team member listing |
+The application will be available at **http://localhost:5000**.
 
 ---
 
 ## Usage
 
-### Starting the Application
-
-```bash
-# Activate virtual environment first (if not already activated)
-.\venv\Scripts\activate    # Windows
-source venv/bin/activate    # Linux/Mac
-
-# Run the application
-python main.py
-```
-
-The application will start and be available at: **http://localhost:5000**
-
 ### Default Login Credentials
 
-After running `load_user.py`, you can log in with any of these accounts (no password required):
+After running `load_user.py`, log in with any of these accounts (no password required):
 
-**Admin Accounts** (Full CRUD access):
+**Admin Accounts** (Full CRUD):
 
 | Student Number | Name |
 |---|---|
@@ -640,50 +597,72 @@ After running `load_user.py`, you can log in with any of these accounts (no pass
 
 | Section | Path | Description |
 |---|---|---|
-| **Dashboard** | `/dashboard` | Overview of key indicators and trends |
-| **Countries** | `/countries` | Browse countries and regional data |
-| **Health** | `/health` | Health indicators and statistics |
+| **Dashboard** | `/dashboard` | Overview of key indicators, domain coverage, year ranges |
+| **Countries** | `/countries` | Browse countries, regional data, interactive world map |
+| **Health** | `/health` | Health indicators with filtering and trend analysis |
 | **GHG Emissions** | `/ghg` | Greenhouse gas emissions by country and year |
-| **Energy** | `/energy` | Energy consumption and production data |
-| **Freshwater** | `/freshwater` | Freshwater resources and usage |
-| **Sustainability** | `/sustainability` | Sustainability metrics and environmental indicators |
+| **Energy** | `/energy` | Energy consumption, production, and renewable data |
+| **Freshwater** | `/freshwater` | Freshwater resources and usage metrics |
+| **Sustainability** | `/sustainability` | Environmental sustainability indicators |
+
+---
+
+## API Endpoints
+
+### Authentication
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/auth/login` | None | Login page |
+| `POST` | `/auth/login` | None | Authenticate with student number |
+| `GET` | `/auth/logout` | None | Clear session and redirect |
+
+### Dashboard
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/dashboard` | None | Main dashboard with domain coverage stats |
+
+### Countries
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/countries/` | None | List all countries with search |
+| `GET` | `/countries/profile/<id>` | None | Country profile across all domains |
+| `GET` | `/countries/region/<name>` | None | Region profile with aggregated stats |
+| `GET` | `/countries/resolve/<iso2>` | None | Resolve ISO2 code to country profile |
+| `GET` | `/countries/api/stats` | None | Global statistics (JSON) |
+| `GET` | `/countries/api/region-stats` | None | Region statistics (JSON) |
+| `GET` | `/countries/api/has-data/<iso2>` | None | Data availability check (JSON) |
+
+### Domain CRUD (GHG, Health, Energy, Freshwater, Sustainability)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/<domain>/` | None | List records with filtering, sorting, pagination |
+| `GET` | `/<domain>/api/get/<id>` | None | Get single record (JSON) |
+| `POST` | `/<domain>/api/add` | Editor/Admin | Add new record |
+| `POST` | `/<domain>/api/edit/<id>` | Editor/Admin | Edit existing record |
+| `POST` | `/<domain>/api/delete/<id>` | Admin | Delete record |
+
+### About
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/about` | None | About page with team members |
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
-
-**1. Database Connection Error**
-- Verify MySQL server is running
-- Check `.env` file exists and has correct credentials
-- Ensure database `wdi_project` exists
-
-**2. Import Errors**
-- Make sure virtual environment is activated
-- Run `pip install -r requirements.txt` again
-
-**3. Script Execution Order Error**
-- **Always run `load_all.py` BEFORE `load_user.py`**
-- If you ran them in wrong order, drop database and start over:
-  ```sql
-  DROP DATABASE wdi_project;
-  CREATE DATABASE wdi_project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-  ```
-  Then run scripts in correct order again.
-
-**4. PowerShell Execution Policy Error (Windows)**
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-**5. Module Not Found Errors**
-- Ensure you are in the project root directory
-- Verify virtual environment is activated
-- Check that all dependencies are installed
-
-**6. Port Already in Use**
-- Flask default port is 5000; if occupied, set `FLASK_RUN_PORT` in `.env` or modify `main.py`
+| Issue | Solution |
+|---|---|
+| **Database connection error** | Verify MySQL is running; check `.env` credentials; ensure `wdi_project` database exists |
+| **Import errors** | Activate virtual environment; run `pip install -r requirements.txt` |
+| **Wrong script execution order** | Drop and recreate database, then run `load_all.py` before `load_user.py` |
+| **PowerShell execution policy** | `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` |
+| **Module not found** | Ensure you are in project root; verify venv is activated |
+| **Port 5000 in use** | Set `FLASK_RUN_PORT` in `.env` or modify `main.py` |
 
 ---
 
@@ -706,13 +685,15 @@ This project is developed for **educational purposes** as part of the **BLG-317E
 
 | Resource | Location |
 |---|---|
-| **Database Schema** | `SQL/database.sql` |
-| **Data Loading Script** | `scripts/load_all.py` |
-| **User Seeding Script** | `scripts/load_user.py` |
-| **Application Entry Point** | `main.py` |
-| **Route Handlers** | `App/routes/` |
-| **HTML Templates** | `frontend/css/templates/` |
-| **CSV Data Files** | `Data/` |
+| **Database Schema (DDL)** | [SQL/database.sql](SQL/database.sql) |
+| **Architecture D2 Source** | [docs/architecture/architecture.d2](docs/architecture/architecture.d2) |
+| **Database Schema D2 Source** | [docs/architecture/database-schema.d2](docs/architecture/database-schema.d2) |
+| **Data Loader Script** | [scripts/load_all.py](scripts/load_all.py) |
+| **User Seed Script** | [scripts/load_user.py](scripts/load_user.py) |
+| **Application Entry Point** | [main.py](main.py) |
+| **Route Handlers** | [App/routes/](App/routes/) |
+| **HTML Templates** | [frontend/css/templates/](frontend/css/templates/) |
+| **CSV Data Files** | [Data/](Data/) |
 
 <br />
 
